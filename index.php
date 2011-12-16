@@ -6,9 +6,10 @@
 
     $mySimpleSerial->setSecret('56dfg6486af5g468wtg6f5h454kju8z');
     $mySimpleSerial->setRounds(20);
-    $mySimpleSerial->setSerialLength(6);
+    $mySimpleSerial->setSerialLength(20);
+    $mySimpleSerial->setCount(4);
 
-    $serials = $mySimpleSerial->generateSerials(4);
+    $serials = $mySimpleSerial->generateSerials();
 
 ?><!doctype html>
 <html lang="en">

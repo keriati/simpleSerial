@@ -1,16 +1,20 @@
 <?php
 
     /**
-     * Simple Serial generator and validator class
+     * Simple Serial generator and validator class.
      *
+     * @author  Attila Kerekes
+     * @link    http://www.attilakerekes.com/
+     * @version 1.0
      */
     class simpleSerial
     {
 
         private $_secret = "";
         private $_pool = "0123456789abcdefghijklmnopqrstuvwxyz";
-        private $_serialLength = 6;
+        private $_serialLength = 20;
         private $_rounds = "10";
+        private $_count = "1";
         private $_delimiter = "-";
 
         /**
@@ -83,8 +87,24 @@
          */
         public function setSerialLength($serialLength)
         {
-            if(is_int($serialLength) && $serialLength < 37) {
+            if(is_int($serialLength) && $serialLength < 37 && ($serialLength&1) ) {
                 $this->_serialLength = $serialLength;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Set how many serials you want to generate.
+         *
+         * @param $count    int     Number of serials to generate.
+         *
+         * @return bool
+         */
+        public function setCount($count)
+        {
+            if(is_int($count) && $count <= 64) {
+                $this->_count = $count;
                 return true;
             }
             return false;
@@ -93,19 +113,19 @@
         /**
          * Generate some serials
          *
-         * @param $number   int     Number of serials
-         *
          * @return array            An array of serials
          */
-        public function generateSerials($number)
+        public function generateSerials()
         {
             $serials = array();
 
-            for ($i = 1; $i <= $number; $i++) {
-                $random = $this->generateRandom($this->_pool, $this->_serialLength);
+            for ($i = 1; $i <= $this->_count; $i++) {
+                $random = $this->generateRandom($this->_pool, ($this->_serialLength / 2));
 
                 $hash   = $this->generateHash($random);
-                $serial = $random . $this->_delimiter . $hash;
+                $serial = $random . $hash;
+
+                $serial = implode('-',str_split($serial,5));
 
                 array_push($serials, $serial);
             }
@@ -121,9 +141,9 @@
          */
         public function validateSerial($serial)
         {
-
-            $mySerial = substr($serial, 0, $this->_serialLength);
-            $myHash   = substr($serial, $this->_serialLength * -1);
+            $serial = str_replace($this->_delimiter,'',$serial);
+            $mySerial = substr($serial, 0, ($this->_serialLength / 2));
+            $myHash   = substr($serial, ($this->_serialLength / 2) * -1);
 
             $hash = $this->generateHash($mySerial);
 
@@ -154,7 +174,7 @@
 
             $hash = base_convert($hash, 16, 36);
 
-            $hash = substr($hash, 0, $this->_serialLength);
+            $hash = substr($hash, 0, ($this->_serialLength / 2));
 
             return $hash;
         }
