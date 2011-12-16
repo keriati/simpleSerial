@@ -1,7 +1,7 @@
 <?php
 
     /**
-     * Simple Serial generator class
+     * Simple Serial generator and validator class
      *
      */
     class simpleSerial
@@ -10,13 +10,13 @@
         private $_secret = "";
         private $_pool = "0123456789abcdefghijklmnopqrstuvwxyz";
         private $_serialLength = 6;
-
-        public $delimiter = "-";
+        private $_rounds = "10";
+        private $_delimiter = "-";
 
         /**
          * Set secret hash for encryption
          *
-         * @param $secret   string  Secret key for the serial
+         * @param $secret   string  Secret serial for the serial
          *
          * @return bool
          */
@@ -24,6 +24,67 @@
         {
             if (is_string($secret) && strlen($secret) > 6) {
                 $this->_secret = $secret;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Set the delimiter in the serial.
+         *
+         * @param $delimiter    string  The delimiter.
+         *
+         * @return bool
+         */
+        public function setDelimiter($delimiter)
+        {
+            $this->_delimiter = $delimiter;
+            return true;
+        }
+
+        /**
+         * Set the number of rounds for hash to run.
+         *
+         * @param $round    int Rounds.
+         *
+         * @return bool
+         */
+        public function setRounds($round)
+        {
+            if (is_int($round)) {
+                $this->_rounds = $round;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Set character pool for random generator (first part of serial).
+         *
+         * @param $pool     string  Pool for random generator.
+         *
+         * @return bool
+         */
+        public function setPool($pool)
+        {
+            if (is_string($pool)) {
+                $this->_pool = $pool;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Set the length of one serial block.
+         *
+         * @param $serialLength int Length of the serial
+         *
+         * @return bool
+         */
+        public function setSerialLength($serialLength)
+        {
+            if(is_int($serialLength) && $serialLength < 37) {
+                $this->_serialLength = $serialLength;
                 return true;
             }
             return false;
@@ -41,10 +102,10 @@
             $serials = array();
 
             for ($i = 1; $i <= $number; $i++) {
-                $random     = $this->generateRandom($this->_pool, $this->_serialLength);
-                $fullSerial = $random . $this->_secret;
-                $md5        = md5($fullSerial);
-                $serial     = $random . $this->delimiter . substr($md5, 0, $this->_serialLength);
+                $random = $this->generateRandom($this->_pool, $this->_serialLength);
+
+                $hash   = $this->generateHash($random);
+                $serial = $random . $this->_delimiter . $hash;
 
                 array_push($serials, $serial);
             }
@@ -54,22 +115,48 @@
         /**
          * Validate serial
          *
-         * @param $key      string  Serial to validate
+         * @param $serial   string  Serial to validate
          *
          * @return bool             True if serial is valid, else false
          */
-        public function validateSerial($key)
+        public function validateSerial($serial)
         {
 
-            $myKey = substr($key, 0, $this->_serialLength) . $this->_secret;
-            $myMd5 = substr($key, $this->_serialLength * -1);
-            $md5   = substr(md5($myKey), 0, $this->_serialLength);
+            $mySerial = substr($serial, 0, $this->_serialLength);
+            $myHash   = substr($serial, $this->_serialLength * -1);
 
-            if ($md5 == $myMd5) {
+            $hash = $this->generateHash($mySerial);
+
+            if ($hash == $myHash) {
                 return true;
             }
             return false;
 
+        }
+
+        /**
+         * Hash generator.
+         *
+         * @param $data     string  Data to hash.
+         *
+         * @return string           Hash converted to base 36.
+         */
+        private function generateHash($data)
+        {
+
+            $fullSerial = $this->_secret . $data . $this->_secret . $data;
+            $hash       = "";
+
+            for ($i = 0; $i < $this->_rounds; $i++) {
+                $hash .= $fullSerial;
+                $hash = hash('sha256', $hash);
+            }
+
+            $hash = base_convert($hash, 16, 36);
+
+            $hash = substr($hash, 0, $this->_serialLength);
+
+            return $hash;
         }
 
         /**
@@ -87,7 +174,7 @@
 
             for ($i = 1; $i <= $length; $i++) {
 
-                $index = mt_rand(0, (strlen($pool) -1));
+                $index = mt_rand(0, (strlen($pool) - 1));
                 $char  = $pool[$index];
                 $random .= $char;
             }

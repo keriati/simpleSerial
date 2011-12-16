@@ -5,8 +5,10 @@
     $mySimpleSerial = new simpleSerial();
 
     $mySimpleSerial->setSecret('56dfg6486af5g468wtg6f5h454kju8z');
+    $mySimpleSerial->setRounds(20);
+    $mySimpleSerial->setSerialLength(6);
 
-    $serials = $mySimpleSerial->generateSerials(2);
+    $serials = $mySimpleSerial->generateSerials(4);
 
 ?><!doctype html>
 <html lang="en">
@@ -19,6 +21,11 @@
     <meta name="author" content="">
 
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style type="text/css">
+        body * {
+            font-family: Consolas, Monaco, monospace;
+        }
+    </style>
 
 </head>
 
@@ -40,7 +47,9 @@
             <?php foreach($serials as $serial) : ?>
 
             <li>
-                <?php echo ($mySimpleSerial->validateSerial($serial)) ? $serial . ' is valid!' : ' is not valid!' ;?>
+                <?php
+                echo $serial;
+                echo ($mySimpleSerial->validateSerial($serial)) ? ' is valid!' : ' is not valid!' ;?>
             </li>
 
             <?php endforeach; ?>
