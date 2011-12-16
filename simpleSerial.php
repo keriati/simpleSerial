@@ -13,8 +13,8 @@
         private $_secret = "";
         private $_pool = "0123456789abcdefghijklmnopqrstuvwxyz";
         private $_serialLength = 20;
-        private $_rounds = "10";
-        private $_count = "1";
+        private $_rounds = 10;
+        private $_count = 1;
         private $_delimiter = "-";
 
         /**
@@ -42,14 +42,17 @@
          */
         public function setDelimiter($delimiter)
         {
-            $this->_delimiter = $delimiter;
-            return true;
+            if (in_array($delimiter, array('-', '_', ' ', ':'))) {
+                $this->_delimiter = $delimiter;
+                return true;
+            }
+            return false;
         }
 
         /**
          * Set the number of rounds for hash to run.
          *
-         * @param $round    int Rounds.
+         * @param $round    int     Rounds.
          *
          * @return bool
          */
@@ -87,7 +90,7 @@
          */
         public function setSerialLength($serialLength)
         {
-            if(is_int($serialLength) && $serialLength < 37 && ($serialLength&1) ) {
+            if (is_int($serialLength) && $serialLength < 37 && ($serialLength & 1)) {
                 $this->_serialLength = $serialLength;
                 return true;
             }
@@ -103,7 +106,7 @@
          */
         public function setCount($count)
         {
-            if(is_int($count) && $count <= 64) {
+            if (is_int($count) && $count <= 64) {
                 $this->_count = $count;
                 return true;
             }
@@ -125,7 +128,7 @@
                 $hash   = $this->generateHash($random);
                 $serial = $random . $hash;
 
-                $serial = implode('-',str_split($serial,5));
+                $serial = implode($this->_delimiter, str_split($serial, 5));
 
                 array_push($serials, $serial);
             }
@@ -141,7 +144,7 @@
          */
         public function validateSerial($serial)
         {
-            $serial = str_replace($this->_delimiter,'',$serial);
+            $serial   = str_replace($this->_delimiter, '', $serial);
             $mySerial = substr($serial, 0, ($this->_serialLength / 2));
             $myHash   = substr($serial, ($this->_serialLength / 2) * -1);
 
