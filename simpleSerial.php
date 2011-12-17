@@ -18,7 +18,7 @@
         private $_delimiter = "-";
 
         /**
-         * Set secret hash for encryption
+         * Set secret key for encryption
          *
          * @param $secret   string  Secret serial for the serial
          *
@@ -123,9 +123,9 @@
             $serials = array();
 
             for ($i = 1; $i <= $this->_count; $i++) {
-                $random = $this->generateRandom($this->_pool, ($this->_serialLength / 2));
+                $random = $this->_generateRandom($this->_pool, ($this->_serialLength / 2));
 
-                $hash   = $this->generateHash($random);
+                $hash   = $this->_generateHash($random);
                 $serial = $random . $hash;
 
                 $serial = implode($this->_delimiter, str_split($serial, 5));
@@ -148,7 +148,7 @@
             $mySerial = substr($serial, 0, ($this->_serialLength / 2));
             $myHash   = substr($serial, ($this->_serialLength / 2) * -1);
 
-            $hash = $this->generateHash($mySerial);
+            $hash = $this->_generateHash($mySerial);
 
             if ($hash == $myHash) {
                 return true;
@@ -164,7 +164,7 @@
          *
          * @return string           Hash converted to base 36.
          */
-        private function generateHash($data)
+        private function _generateHash($data)
         {
 
             $fullSerial = $this->_secret . $data . $this->_secret . $data;
@@ -190,7 +190,7 @@
          *
          * @return string
          */
-        private function generateRandom($pool, $length)
+        private function _generateRandom($pool, $length)
         {
 
             $random = '';
